@@ -1,6 +1,6 @@
 Package: optMaxlik
 Type: Package
-Title: What the Package Does (Title Case)
+Title: optMaxlik
 Version: 0.1.0
 Authors@R: person("Bo Pieter Johannes", "Andree", email = "b.p.j.andree@vu.nl", role = c("aut", "cre"))
 Description: Extension to the maxLik package for numerical minimzation of Kullback-Leibler divergence. Applies a general to specific approach to custom Likelihood functions. 
