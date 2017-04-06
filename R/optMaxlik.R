@@ -19,15 +19,16 @@ freePars <- function (x){
 #' Compute the corrected AIC from a maxLik object.
 #' @param x maxLik object
 #' @param n number of observations for correction. Defaults to Inf, which coincides with the AIC.
+#' @param penalty numeric that should be added to the log likelihood to adjust when using penalized likelihood or regularized estimators.
 #' @keywords AICc
 #' @return numeric
 #' @export
 
 
-aicc <- function (x,n=Inf){
+aicc <- function (x,n=Inf,penalty=0){
 	k=freePars(x) 
 	c<-(2*k*(k+1))/(n-k-1)
-	aic=2*k-2*logLik(x) 
+	aic=2*k-2*(logLik(x)+penalty)
 	aicc= aic + c 
 	return(aicc)
 }
@@ -175,6 +176,8 @@ as.numeric.matrix <- function(mat){
 #' @param initialfix vector indicating the parameters that should be treated as constants with values supplied in the start vector.
 #' @param nobs number of observations to be used in the corrction of the AIC(c), defaults to Inf.
 #' @param method numerical algorithm. See maxLik package. Defaults to BFGS
+#' @param penalized vector indicating which parameters are penalized in your likelihood function. Will be used to compute adjustments for the AIC(c).
+#' @param pw the weight of you penalty. Supported penalties are abs(parameter value)^pw.
 #' @return maxLik object of final model.
 #' @export
 #' @examples
@@ -185,59 +188,60 @@ as.numeric.matrix <- function(mat){
 #' 
 #' # Create you own Log likelihood function.
 #' crossectionalARMA_44 <- function(pars, ret="LL", Y){
-#' 	data=Y
-#' 	Log.L <-numeric()[1:T]
-#' 	b0    <-pars[1]
+#' 	 data=Y
+#' 	 Log.L <-numeric()[1:T]
+#' 	 b0    <-pars[1]
 #' 
-#' 	B.y   <-pars[2]
-#' 	B.y2  <-pars[3]
-#' 	B.y3  <-pars[4]
-#' 	B.y4  <-pars[5]
+#' 	 B.y   <-pars[2]
+#' 	 B.y2  <-pars[3]
+#' 	 B.y3  <-pars[4]
+#' 	 B.y4  <-pars[5]
 #' 
-#' 	B.e   <-pars[6]
-#' 	B.e2  <-pars[7]
-#' 	B.e3  <-pars[8]
-#' 	B.e4  <-pars[9]
+#' 	 B.e   <-pars[6]
+#' 	 B.e2  <-pars[7]
+#' 	 B.e3  <-pars[8]
+#' 	 B.e4  <-pars[9]
 #' 
-#' 	nu    <-pars[10]#pars[7]
-#' 	sigma <-pars[11]
+#' 	 nu    <-pars[10]
+#' 	 sigma <-pars[11]
 #' 
-#' 	df = as.numeric.matrix(data)
-#' 	T=nrow(df)
-#' 	N=ncol(df)
+#' 	 df = as.numeric.matrix(data)
+#' 	 T=nrow(df)
+#' 	 N=ncol(df)
 #' 
-#' 	p=4
+#' 	 p=4
 #' 
-#' 	e = matrix(0,T,N)
-#' 	e[1:p,] <- 0 ## Initialize with e1 = 0
+#' 	 e = matrix(0,T,N)
+#' 	 e[1:p,] <- 0 ## Initialize with e1 = 0
 #' 
-#' 	Log.L[1:p]<-0
+#' 	 Log.L[1:p]<-0
 #' 
-#' 	A =N*log((gamma((nu+1)/2))/(((pi*(nu-2))^0.5)*gamma(nu/2))) - 0.5*N*log(max(0,sigma)^2)
-#' 	A2=((nu+1)/2)
-#' 	A3=(max(0,sigma)^2*(nu-2))  
+#' 	 A =N*log((gamma((nu+1)/2))/(((pi*(nu-2))^0.5)*gamma(nu/2))) - 0.5*N*log(max(0,sigma)^2)
+#' 	 A2=((nu+1)/2)
+#' 	 A3=(max(0,sigma)^2*(nu-2))  
 #' 
-#' 	for (t in (p+1):T) {
-#' 	y = df[t,]#as.numeric(matrix(c(df[t,])))
-#' 	ymin =  df[t-1,]#as.numeric(matrix(c(df[t-1,])))
-#' 	ymin2 =  df[t-2,]#as.numeric(matrix(c(df[t-2,])))
-#' 	ymin3 =  df[t-3,]#as.numeric(matrix(c(df[t-3,])))
-#' 	ymin4 =  df[t-4,]#as.numeric(matrix(c(df[t-4,])))
+#' 	 for (t in (p+1):T) {
+#' 	  y = df[t,]#as.numeric(matrix(c(df[t,])))
+#' 	  ymin =  df[t-1,]#as.numeric(matrix(c(df[t-1,])))
+#' 	  ymin2 =  df[t-2,]#as.numeric(matrix(c(df[t-2,])))
+#' 	  ymin3 =  df[t-3,]#as.numeric(matrix(c(df[t-3,])))
+#' 	  ymin4 =  df[t-4,]#as.numeric(matrix(c(df[t-4,])))
 #' 
-#' 	emin=e[t-1,]
-#' 	emin2=e[t-2,]
-#' 	emin3=e[t-3,]
-#' 	emin4=e[t-4,]
+#' 	  emin=e[t-1,]
+#' 	  emin2=e[t-2,]
+#' 	  emin3=e[t-3,]
+#' 	  emin4=e[t-4,]
 #' 
-#' 	e[t,] = y - b0 - B.y*ymin - B.e*emin - B.y2*ymin2 - B.e2*emin2 - B.y3*ymin3 - B.e3*emin3 - B.y4*ymin4 - B.e4*emin4 
+#'    MA = B.e*emin + B.e2*emin2 + B.e3*emin3 + B.e4*emin4 
+#' 	  e[t,] = y - b0 - B.y*ymin - B.y2*ymin2 - B.y3*ymin3 - B.y4*ymin4 - MA
 #' 
-#' 	}
+#' 	  }
 #' 
 #' 
-#' 	Log.L <- A - A2*(rowSums(log(1+ (e)^2 / A3)))
-#' 	Log.L[1:p]<-0
+#' 	 Log.L <- A - A2*(rowSums(log(1+ (e)^2 / A3)))
+#' 	 Log.L[1:p]<-0
 #' 
-#' 	if(ret=="e"){return(e)}else if (ret =="LLvec") {return(Log.L)} else(sum(Log.L))
+#' 	 if(ret=="e"){return(e)}else if (ret =="LLvec") {return(Log.L)} else(sum(Log.L))
 #' 
 #' } 
 #'
@@ -272,7 +276,7 @@ as.numeric.matrix <- function(mat){
 #' parsToOriginal2(estimates2, start)
 
 
-opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS"){
+opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS", penalized=numeric(), pw=2){
 
 	newPars <- function (new.start, fix){
 		activepars =rep(1, length(new.start))
@@ -327,7 +331,8 @@ opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS"
 
 	# initial fit
 	first.fit <- maxLik::maxLik(use.LL , start=start, method=method)
-	first.aic <- aicc(first.fit,nobs)
+	penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+	first.aic <- aicc(first.fit,nobs, penalty)
 
 	first.fixed <- fixNew(first.fit)
 	fixed[iter] <- first.fixed 
@@ -359,7 +364,8 @@ opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS"
 	}
 
 	new.fit <- maxLik(new.LL, start=new.pars, method="BFGS")
-	new.aic <- aicc(new.fit,nobs)
+	penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+	new.aic <- aicc(new.fit,nobs,penalty)
 
 	if(new.aic <= first.aic){continue=TRUE}else{continue=FALSE}
 
@@ -397,7 +403,8 @@ opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS"
 			}
 
 			new.fit <- maxLik(new.LL, start=new.pars, method="BFGS")
-			new.aic <- aicc(new.fit,nobs)
+			penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+			new.aic <- aicc(new.fit,nobs,penalty)
 	
 			if(new.aic <= old.aic){continue=TRUE}else{continue=FALSE}
 	
