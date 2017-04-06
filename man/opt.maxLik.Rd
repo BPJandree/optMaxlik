@@ -4,7 +4,8 @@
 \alias{opt.maxLik}
 \title{Main function of the package. Automated general to specific approach for custom Likelihood functions.}
 \usage{
-opt.maxLik(LL, start, initialfix = numeric(), nobs = Inf, method = "BFGS")
+opt.maxLik(LL, start, initialfix = numeric(), nobs = Inf, method = "BFGS",
+  penalized = numeric(), pw = 2)
 }
 \arguments{
 \item{LL}{a log likelihood function.}
@@ -16,6 +17,10 @@ opt.maxLik(LL, start, initialfix = numeric(), nobs = Inf, method = "BFGS")
 \item{nobs}{number of observations to be used in the corrction of the AIC(c), defaults to Inf.}
 
 \item{method}{numerical algorithm. See maxLik package. Defaults to BFGS}
+
+\item{penalized}{vector indicating which parameters are penalized in your likelihood function. Will be used to compute adjustments for the AIC(c).}
+
+\item{pw}{the weight of you penalty. Supported penalties are abs(parameter value)^pw.}
 }
 \value{
 maxLik object of final model.
