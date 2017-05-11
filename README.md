@@ -9,3 +9,8 @@ Example code is contained in the [Vignette](https://github.com/BPJandree/optMaxl
 You may also like my other package [AutoGLM](https://github.com/BPJandree/AutoGLM) for automated General to Specific modelling of generalized linear models suitable for very large datasets.
 
 Feel free to contact me with suggestions or comments. This is the first version of the package, limited testing has been done.
+
+# Next update
+
+- Add an option to select parameters that will not be droppped;
+- Fix an issue where the algorithm crashes if nothing has to be dropped in the first iteration.
