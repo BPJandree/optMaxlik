@@ -10,7 +10,7 @@ You may also like my other package [AutoGLM](https://github.com/BPJandree/AutoGL
 
 Feel free to contact me with suggestions or comments. This is the first version of the package, limited testing has been done.
 
-# Next update
+# First update!
 
-- Add an option to select parameters that will not be droppped;
-- Fix an issue where the algorithm crashes if nothing has to be dropped in the first iteration.
+- Added an option to select parameters that will not be droppped;
+- Fixed an issue where the algorithm crashes if nothing has to be dropped in the first iteration.
