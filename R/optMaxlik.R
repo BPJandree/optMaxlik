@@ -178,6 +178,7 @@ as.numeric.matrix <- function(mat){
 #' @param method numerical algorithm. See maxLik package. Defaults to BFGS
 #' @param penalized vector indicating which parameters are penalized in your likelihood function. Will be used to compute adjustments for the AIC(c).
 #' @param pw the weight of you penalty. Supported penalties are abs(parameter value)^pw.
+#' @param nodrop vector indicating the parameters that will not be dropped. For example, distribution parameters of the ML function.
 #' @return maxLik object of final model.
 #' @export
 #' @examples
@@ -276,141 +277,288 @@ as.numeric.matrix <- function(mat){
 #' parsToOriginal2(estimates2, start)
 
 
-opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS", penalized=numeric(), pw=2){
+
+
+
+
+
+ opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS", penalized=numeric(), pw=2, nodrop=numeric()){
+
+
 
 	newPars <- function (new.start, fix){
+
 		activepars =rep(1, length(new.start))
+
 		activepars[fix]<-0
+
 		active.par.values=new.start[-fix]
+
 		return(active.par.values)
+
 	}
+
+
 
 	maxID <- function(x){
+
 		df<-cbind(1:length(x),x)
+
 		df[df[,2]==max(x),1]
+
 	}
 
-	fixNew <- function(x){
+
+
+	fixNew <- function(x, nodrop){
+
 		old.fit = x
+
 		old.tvec = coef(old.fit)/se(old.fit)
-		old.tvec[is.na(old.tvec)]
+
+		old.tvec[is.na(old.tvec)] <-0
+
 		new.freecoefs <- abs(1/old.tvec)
+
 		new.freecoefs[new.freecoefs==Inf]<-0
+
 		new.freecoefs[is.na(new.freecoefs)]<-0
+
+		new.freecoefs[nodrop]<-0
 		return(maxID(new.freecoefs))
+
 	}
+
+
 
 	newStart <- function(fit,fix){
+
 		new.start <- coef(fit) 
+
 		new.start[fix]<-0
+
 		return(new.start)
+
 	}
+
+
 
 	ifnot <- function (x){if(x){return(FALSE)}else{return(TRUE)}}
+
 		# insert names if needed
+
 		if(length(names(start))!=length(start)){names(start)<- paste("par", as.character(1:lengtht(start)), sep="")}
+
 		
+
 		# store supplied parameters
+
 		allpars = start
+
 		# adjust LL if there are initially fixed parameters
+
 		if(length(initialfix)>0){	
+
 			initialfixvals <- allpars[initialfix]
+
 			start = start[-initialfix]
+
 			use.LL <- function(start){
+
 				runpars <-parsToOriginal(start,allpars)
+
 				runpars[names(initialfixvals)]<-initialfixvals
+
 				LL(runpars)
+
 			}
+
 		} else {
+
 			use.LL <- LL
+
 		}
+
+
 
 	# initialize pointers
+
 	fixed=numeric()
+
 	iter=length(fixed) + 1
 
+
+
 	# initial fit
+
 	first.fit <- maxLik::maxLik(use.LL , start=start, method=method)
+
 	penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+
 	first.aic <- aicc(first.fit,nobs, penalty)
 
-	first.fixed <- fixNew(first.fit)
+
+	notdrop = names(coef(first.fit)[nodrop])
+	first.fixed <- fixNew(first.fit, notdrop)
+
 	fixed[iter] <- first.fixed 
 
+
+
 	if(ifnot(is.null(names(allpars)))){
+
 		drop=names(start)[first.fixed]
+
 	} else {
+
 		drop=as.character(first.fixed)
+
 	}
+
 	message(paste("dropping",drop))
 
+
+
 	# set next drop par to zero
+
 	new.start <- newStart(first.fit, first.fixed)
 
+
+
 	# remove drop par
+
 	new.pars <- newPars(new.start, fixed)
 
+
+
 	# build new LL wit hfixed par
+
 	new.LL <- function(new.pars){
+
 		runpars <-new.pars
+
 		locs =rev(fixed)
+
 		for (loc in 1: length(locs)){
+
 			runpars<-insert.at(runpars, locs[loc], 0)
+
 		}
+
 		if(length(initialfix)>0){	
+
 			runpars[names(initialfixvals)]<-initialfixvals
+
 		}
+
 		use.LL(runpars)
+
 	}
 
-	new.fit <- maxLik(new.LL, start=new.pars, method="BFGS")
+
+
+	new.fit <- maxLik(new.LL, start=new.pars, method=method)
+
 	penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+
 	new.aic <- aicc(new.fit,nobs,penalty)
+
+
+	if(length(new.aic) + length(first.aic) !=2){
+		return(first.fit)
+		stop("error in model convergence, returning first model fit. Are distribution parameters supplied in nodrop ?")
+	}
 
 	if(new.aic <= first.aic){continue=TRUE}else{continue=FALSE}
 
+
+
 	if (continue){
+
 		while (continue){
 
+
+
 			iter = iter +1
+
 			old.aic = new.aic
+
 			old.fit = new.fit
+
 	
-			new.fixed <- fixNew(old.fit) 
+
+			new.fixed <- fixNew(old.fit, notdrop) 
+
 			fixed[iter] <- new.fixed 
 
+
+
 			if(ifnot(is.null(names(allpars)))){
+
 				drop=names(new.pars)[new.fixed]
+
 			} else {
+
 				drop=as.character(new.fixed)
+
 			}
+
 			message(paste("dropping",drop))
+
 	
+
 			new.start <- newStart(old.fit, new.fixed)
+
+
 
 			new.pars <- newPars(new.start, new.fixed)
 
+
+
 			new.LL <- function(new.pars){
+
 				runpars <-new.pars
+
 				locs =rev(fixed)
+
 				for (loc in 1: length(locs)){
+
 					runpars<-insert.at(runpars, locs[loc], 0)
+
 				}
+
 				if(length(initialfix)>0){	
+
 					runpars[names(initialfixvals)]<-initialfixvals
+
 				}
+
 				use.LL(runpars)
+
 			}
 
+
+
 			new.fit <- maxLik(new.LL, start=new.pars, method="BFGS")
+
 			penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+
 			new.aic <- aicc(new.fit,nobs,penalty)
+
 	
+
 			if(new.aic <= old.aic){continue=TRUE}else{continue=FALSE}
 	
+
 		}
+
+
 			return(old.fit)
+
 		} else {
+
 			return(first.fit)
+
 		}
+
 }
