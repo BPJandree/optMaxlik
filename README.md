@@ -1,3 +1,4 @@
+
 # optMaxlik
 R package for minimization of Kullback-Leibler divergence of custom likelihood functions.
 
@@ -14,3 +15,4 @@ Feel free to contact me with suggestions or comments. This is the first version 
 
 - Added an option to select parameters that will not be droppped;
 - Fixed an issue where the algorithm crashes if nothing has to be dropped in the first iteration.
+- If the numerical optimizer returns with non-zero exit status, op.maxLik will return the first optimization object.
