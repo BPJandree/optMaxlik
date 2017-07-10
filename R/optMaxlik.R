@@ -346,9 +346,9 @@ as.numeric.matrix <- function(mat){
 	ifnot <- function (x){if(x){return(FALSE)}else{return(TRUE)}}
 
 		# insert names if needed
-		if(length(names(start))!=length(start)){names(start)<- paste("par", as.character(1:lengtht(start)), sep="")}
+		if(length(names(start))!=length(start)){names(start)<- paste("par", as.character(1:length(start)), sep="")}
 	 	# insert names if nonunique names
-		if(length(unique(names(start)))!=length(start)){names(start)<- paste("par", as.character(1:lengtht(start)), sep="")}
+		if(length(unique(names(start)))!=length(start)){names(start)<- paste("par", as.character(1:length(start)), sep="")}
 		
 
 		# store supplied parameters
