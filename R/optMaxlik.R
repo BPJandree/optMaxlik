@@ -414,7 +414,9 @@ as.numeric.matrix <- function(mat){
 		drop=as.character(first.fixed)
 
 	}
-
+	
+	message(paste("start LL:",as.character(logLik(first.fit))))
+	message(paste("start IC:",as.character(first.aic)))
 	message(paste("dropping",drop))
 
 
@@ -463,7 +465,9 @@ as.numeric.matrix <- function(mat){
 
 	new.aic <- aicc(new.fit,nobs,penalty)
 
-
+	message(paste("second LL:",as.character(logLik(new.fit))))
+	message(paste("second IC:",as.character(new.aic)))
+	 
 	if(length(new.aic) + length(first.aic) !=2){
 		return(first.fit)
 		stop("error in model convergence, returning first model fit. Are distribution parameters supplied in nodrop ?")
@@ -504,7 +508,6 @@ as.numeric.matrix <- function(mat){
 			}
 
 			message(paste("dropping",drop))
-
 	
 
 			new.start <- newStart(old.fit, new.fixed)
@@ -544,7 +547,9 @@ as.numeric.matrix <- function(mat){
 			penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
 
 			new.aic <- aicc(new.fit,nobs,penalty)
-
+			
+			message(paste("LL:",as.character(logLik(new.fit))))
+			message(paste("IC:",as.character(new.aic)))
 	
 
 			if(new.aic <= old.aic){continue=TRUE}else{continue=FALSE}
