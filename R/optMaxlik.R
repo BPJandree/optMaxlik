@@ -282,8 +282,8 @@ as.numeric.matrix <- function(mat){
 
 
 
- opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS", penalized=numeric(), pw=2, nodrop=numeric()){
-
+ opt.maxLik <- function (LL, start, initialfix=numeric(), nobs=Inf, method="BFGS", 
+			 penalized=numeric(), pp=2, pw=1, nodrop=numeric()){
 
 
 	newPars <- function (new.start, fix){
@@ -393,7 +393,7 @@ as.numeric.matrix <- function(mat){
 
 	first.fit <- maxLik::maxLik(use.LL , start=start, method=method)
 
-	penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+	penalty=pw*sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pp
 
 	first.aic <- aicc(first.fit,nobs, penalty)
 
@@ -461,7 +461,7 @@ as.numeric.matrix <- function(mat){
 
 	new.fit <- maxLik(new.LL, start=new.pars, method=method)
 
-	penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+	penalty=pw*sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pp
 
 	new.aic <- aicc(new.fit,nobs,penalty)
 
@@ -544,7 +544,7 @@ as.numeric.matrix <- function(mat){
 
 			new.fit <- maxLik(new.LL, start=new.pars, method="BFGS")
 
-			penalty=sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pw
+			penalty=pw*sum(abs(parsToOriginal(coef(first.fit),start)[penalized]))^pp
 
 			new.aic <- aicc(new.fit,nobs,penalty)
 			
